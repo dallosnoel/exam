@@ -1,0 +1,126 @@
+A feladat alapvetően három részből áll: a hálózattervezés és prototípus kivitelezése, a szerverek telepítése és beállítása, valamint felhőszolgáltatás telepítése és beállítása. A Packet Tracer szoftverrel leginkább az első részt tudjuk modellezni, amely a hálózati infrastruktúra kiépítésére vonatkozik. Az alábbiakban bemutatok egy Packet Tracer feladatot, amely az alapvető hálózati tervezési és konfigurációs lépéseket tartalmazza.
+Packet Tracer Feladat: Hálózattervezés és kivitelezés
+Feladat leírása:
+
+A vizsgázónak egy három telephelyet lefedő hálózati infrastruktúrát kell terveznie és megvalósítania a Packet Tracer alkalmazásban, figyelembe véve az alábbi követelményeket:
+
+    Három telephelyes hálózat: A hálózatnak három telephelyet kell lefednie. Minden telephelyen más-más eszközök és konfigurációk lesznek, és azokat össze kell kötni.
+    VLAN-ok és forgalomirányítás: Legalább egy telephelyen több VLAN-t kell konfigurálni, és VLAN-ok közötti forgalomirányítást kell biztosítani.
+    Redundancia és IPv4/IPv6 címzés: Legalább két redundáns forgalomirányító és az IPv4 és IPv6 címzés kombinációja.
+    Vezeték nélküli hálózat: Az egyik telephelyen egy vezeték nélküli hozzáférési pontot kell kialakítani.
+    VPN kapcsolat: A három telephely közötti WAN kapcsolatot VPN-en keresztül kell megoldani.
+    Hálózati biztonság: Használj ACL-eket és tűzfalat a forgalom biztonságos irányításához.
+
+1. Hálózat Tervezése:
+
+    Készíts egy alapvető topológiai diagramot a három telephely közötti kapcsolatokkal.
+    Használj legalább 2 forgalomirányítót (Router), és biztosíts redundanciát (HSRP, VRRP vagy GLBP).
+    Telephelyenként használj legalább egy menedzselhető kapcsolót, amelyet VLAN-ok kezelésére konfigurálsz.
+    A telephelyek közötti kapcsolatot VPN tunnellel kell biztosítani.
+    A telephelyekhez kapcsolódó végberendezések (PC-k, nyomtatók, stb.) különböző VLAN-okba kerüljenek.
+
+2. Eszközök és Beállítások:
+
+A következő eszközöket használd a Packet Tracerben:
+
+    2 Router
+    3 Switch
+    3 PC (egy-egy telephelyhez)
+    1 Access Point (WiFi)
+    1 Tűzfal (ASA, ha elérhető)
+
+Eszközök konfigurálása:
+
+Routerek:
+
+    VLAN-ok közötti forgalomirányítás (Inter-VLAN Routing): Használj Layer 3 kapcsolót vagy Router on a Stick konfigurációt.
+        VLAN 10: Sales
+        VLAN 20: HR
+        VLAN 30: IT
+
+    Minden VLAN-hoz hozz létre alhálózati címeket és konfigurálj forgalomirányítást a Routerek között.
+
+    Példa:
+
+        Router1 (R1) beállításai (interfész konfigurálás):
+
+        interface gig0/0
+        ip address 192.168.10.1 255.255.255.0
+        no shutdown
+        interface gig0/1
+        ip address 192.168.20.1 255.255.255.0
+        no shutdown
+
+        A Routeron egy alhálózati interfészt kell létrehozni minden VLAN számára.
+
+Switch:
+
+    VLAN konfigurálása: Hozz létre VLAN-okat a kapcsolókon.
+        Telephely 1: VLAN 10
+        Telephely 2: VLAN 20
+        Telephely 3: VLAN 30
+
+    Példa:
+
+    vlan 10
+    name Sales
+    vlan 20
+    name HR
+    vlan 30
+    name IT
+
+    Trunk portok beállítása: A forgalomirányítónál trunk portokat kell beállítani a VLAN-ok közötti adatforgalom engedélyezésére.
+
+Access Point:
+
+    Vezeték nélküli hálózat létrehozása: Hozz létre egy WiFi hálózatot az egyik telephelyen.
+        SSID: "SalesWiFi"
+        Engedélyezd a WPA2 titkosítást.
+    Ha a router nem rendelkezik beépített WiFi interfésszel, használj külön Access Point-ot és csatlakoztasd a kapcsolóhoz.
+
+PC-k és végberendezések:
+
+    DHCP és statikus IP-k: A telephelyekhez tartozó PC-k IP címét statikus vagy dinamikus címzéssel kell kiosztani, az igényeknek megfelelően.
+
+    Példa: PC1 (Sales)
+        DHCP-t használj, hogy a megfelelő IP címet kapja.
+
+    Tesztelés: Hozz létre ping teszteket a három telephely között, hogy megbizonyosodj arról, hogy a VLAN-ok közötti forgalomirányítás és VPN kapcsolat működik.
+
+3. Hálózatbiztonság:
+
+    ACL (Access Control Lists): Állíts be alapértelmezett ACL-eket, amelyek szabályozzák, hogy mely eszközök és felhasználók férhetnek hozzá a különböző hálózati erőforrásokhoz.
+
+    Példa:
+
+    access-list 101 deny ip 192.168.10.0 0.0.0.255 192.168.20.0 0.0.0.255
+    access-list 101 permit ip any any
+
+    Tűzfal: Állíts be egy tűzfalat, hogy a bejövő és kimenő forgalmat szűrni tudd.
+
+4. VPN beállítása:
+
+    VPN kapcsolat a telephelyek között: Használj egy egyszerű Site-to-Site VPN-t a három telephely összekapcsolásához.
+
+    Példa: IKEv2 VPN beállítás:
+
+    crypto ikev2 policy 10
+     encryption aes-256
+     integrity sha256
+    !
+    crypto ikev2 enable
+
+5. Tesztelés és Verifikáció:
+
+    Ping teszt: Ellenőrizd, hogy a három telephely közötti kapcsolat megfelelően működik-e.
+    VPN kapcsolat ellenőrzése: Teszteld a VPN kapcsolatot, hogy megbizonyosodj arról, hogy az adatok biztonságosan áramlanak a telephelyek között.
+
+6. Dokumentáció és Bemutató:
+
+A projekt befejezése után a következőket kell benyújtani:
+
+    A hálózati tervezés dokumentációja: A topológiai diagram, eszközök konfigurálásának részletezése.
+    A hálózat tesztelésének dokumentációja: A tesztelési lépések és eredmények, beleértve a ping teszteket és VPN kapcsolat tesztelését.
+    Prototípus működésének bemutatása: Egy rövid videó (2-5 perc), amely bemutatja a hálózat működését, a konfigurációk ellenőrzését és tesztelését.
+
+Ez a feladat bemutatja a hálózati tervezés és kivitelezés alapvető lépéseit a Packet Tracer szoftver segítségével, miközben figyelembe veszi a vizsgára előírt összes követelményt.
