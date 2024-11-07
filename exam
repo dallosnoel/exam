@@ -158,3 +158,103 @@ Végül mindent implementálj Packet Tracerben, teszteld a kapcsolatokat (ping, 
 Összegzés
 
 A fenti lépések segítségével egy jól tervezett és konfigurált hálózatot hozhatsz létre Packet Tracerben, amely megfelel a vizsga követelményeinek. A cél, hogy minden egyes részt alaposan megérts és jól alkalmazd.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+A subinterfészek létrehozása lehetővé teszi a routerek számára, hogy különböző VLAN-okkal dolgozzanak, és azok között forgalmat irányítsanak. Ez a konfiguráció a router-on-a-stick módszert alkalmazza, amely segítségével egyetlen fizikai interfész több különböző alhálózatot (VLAN-t) kezelhet. A subinterfészek mindegyike egy-egy VLAN-hoz tartozik, és az adott VLAN-hoz rendelünk IP-címeket.
+
+Lépésről lépésre bemutatom, hogyan kell létrehozni a subinterfészeket:
+1. Alapvető hálózati beállítások
+
+Mielőtt subinterfészeket hozol létre, győződj meg arról, hogy a következő eszközökkel rendelkezel:
+
+    Router (Pl. Router1, Router2, Router3)
+    Switch, amely trunk portot használ (pl. Switch1, Switch2, Switch3)
+
+A routeren egyetlen fizikai interfész (pl. GigabitEthernet0/0) fogja kezelni az összes VLAN forgalmát. Ez a fizikai interfész azonban különböző subinterfészekre lesz osztva, és mindegyik subinterfész egy-egy VLAN-hoz tartozik.
+2. Subinterfészek létrehozása a routeren
+2.1. Fizikai interfész konfigurálása
+
+Először is győződj meg arról, hogy a router fizikai interfészének (pl. GigabitEthernet0/0) a link státusza aktív. Ha nem vagy benne biztos, hogy a fizikai interfész működik, futtasd a következő parancsot a CLI-ben:
+
+Router(config)# interface GigabitEthernet0/0
+Router(config-if)# no shutdown
+
+2.2. Subinterfészek létrehozása
+
+Mivel a router egyetlen fizikai interfészen fog kezelni több VLAN-t, a következő lépésben subinterfészeket hozunk létre. Minden VLAN-hoz hozzárendelünk egy-egy subinterfész (pl. GigabitEthernet0/0.10, GigabitEthernet0/0.20, stb.), és ezekhez külön IP-címeket konfigurálunk.
+Példa: Subinterfészek létrehozása Router1-en
+
+    VLAN 10 (Adminisztráció) subinterfész létrehozása:
+
+Router1(config)# interface GigabitEthernet0/0.10
+Router1(config-if)# encapsulation dot1Q 10
+Router1(config-if)# ip address 192.168.10.1 255.255.255.0
+Router1(config-if)# no shutdown
+
+    GigabitEthernet0/0.10: A 0/0 az a fizikai interfész, amelyhez a subinterfész tartozik, a .10 pedig a VLAN 10 azonosítója.
+    encapsulation dot1Q 10: Ez a parancs beállítja a 802.1Q VLAN encapculációt, és azt is, hogy ez a subinterfész a 10-es VLAN-t kezeli.
+    ip address 192.168.10.1 255.255.255.0: Az IP-cím és alhálózati maszk beállítása a VLAN 10-hez.
+    no shutdown: Az interfész aktiválása.
+
+    VLAN 20 (Fejlesztés) subinterfész létrehozása:
+
+Router1(config)# interface GigabitEthernet0/0.20
+Router1(config-if)# encapsulation dot1Q 20
+Router1(config-if)# ip address 192.168.20.1 255.255.255.0
+Router1(config-if)# no shutdown
+
+    A GigabitEthernet0/0.20 subinterfész a VLAN 20-hoz van rendelve, és az IP-cím 192.168.20.1 lesz.
+
+    VLAN 30 (Raktár) subinterfész létrehozása:
+
+Router1(config)# interface GigabitEthernet0/0.30
+Router1(config-if)# encapsulation dot1Q 30
+Router1(config-if)# ip address 192.168.30.1 255.255.255.0
+Router1(config-if)# no shutdown
+
+    A GigabitEthernet0/0.30 subinterfész a VLAN 30-hoz tartozik, és az IP-cím 192.168.30.1 lesz.
+
+3. Trunk kapcsolat a switch és router között
+
+Miután a routeren létrehoztad a szükséges subinterfészeket, az egyetlen fizikai interfésznek a trunk módba kell állnia a kapcsolón, hogy a több VLAN forgalmát kezelni tudja. Ehhez a switch portját trunk porttá kell konfigurálni.
+Példa: Switch1 trunk port konfigurálása
+
+    Válaszd ki azt a portot a switch-en, amely a routerhez csatlakozik, és állítsd be trunk módban:
+
+Switch1(config)# interface range FastEthernet0/24
+Switch1(config-if-range)# switchport mode trunk
+Switch1(config-if-range)# switchport trunk encapsulation dot1q
+
+    switchport mode trunk: Ez a parancs beállítja a portot trunk módban.
+    switchport trunk encapsulation dot1q: A 802.1Q VLAN encapsulációt használjuk.
+
+3.1. VLAN-ok hozzárendelése a switch-en
+
+Győződj meg arról, hogy a megfelelő VLAN-ok létre vannak hozva a switch-en, és hozzárendeled őket a portokhoz. Például, ha a portokhoz VLAN 10, 20 és 30 tartoznak, akkor így konfigurálhatod a switch-et:
+
+Switch1(config)# vlan 10
+Switch1(config-vlan)# name Admin
+Switch1(config)# vlan 20
+Switch1(config-vlan)# name Dev
+Switch1(config)# vlan 30
+Switch1(config-vlan)# name Warehouse
+
+Most már minden port a megfelelő VLAN-hoz van rendelve, és a trunk porton keresztül ezek a VLAN-ok elérhetők a routeren.
+4. Tesztelés
+
+Most, hogy a router-en létrehoztad a subinterfészeket és a switch-en trunk kapcsolatot konfiguráltál, tesztelheted a VLAN-ok közötti kommunikációt. A következő parancsokat használhatod:
+
+    Ping teszt a router subinterfészei között:
+
+Ha például egy PC a VLAN 10-ben van, akkor a következő pinget használhatod, hogy teszteld a kapcsolatot:
+
+PC1> ping 192.168.10.1  (ping a router alhálózati gateway-jére)
+
+Ha a ping sikeres, akkor az alábbiak szerint működik a VLAN-ok közötti kommunikáció.
+5. Összegzés
+
+    Subinterfészek létrehozása a routeren a következő lépéseket foglalja magában: fizikai interfész aktiválása, VLAN encapculáció beállítása (dot1Q), IP-címek rendelése a VLAN-okhoz, és az interfészek aktiválása (no shutdown).
+    Trunk portok a switch-en biztosítják a VLAN-ok közötti adatforgalmat, és a router subinterfészei irányítják a különböző VLAN-ok közötti forgalmat.
+    A fenti konfigurációval több VLAN-ot tudsz kezelni egyetlen fizikai interfészen, így biztosítva az inter-VLAN routing-ot.
+
+Ha követed ezeket a lépéseket, a router képes lesz a VLAN-ok közötti forgalom irányítására, és minden VLAN-ban lévő eszköz kommunikálhat egymással.
